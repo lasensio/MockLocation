@@ -1,31 +1,27 @@
 package br.com.asensio.mocklocation;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.common.api.GoogleApiClient;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
     private TextView latitudeField;
     private TextView longitudeField;
+    private TextView latitudeNetworkField;
+    private TextView longitudeNetworkField;
+    private TextView latitudePassiveField;
+    private TextView longitudePassiveField;
     private LocationManager locationManager;
     private String provider;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,35 +29,101 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setContentView(R.layout.activity_main);
         latitudeField = (TextView) findViewById(R.id.textView2);
         longitudeField = (TextView) findViewById(R.id.textView);
+        latitudeNetworkField = (TextView) findViewById(R.id.txvLatNetwork);
+        longitudeNetworkField = (TextView) findViewById(R.id.txvLongNetwork);
+        latitudePassiveField = (TextView) findViewById(R.id.txvLatPassive);
+        longitudePassiveField = (TextView) findViewById(R.id.txvLonPassive);
 
         //Get location manager
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         Criteria criteria = new Criteria();
-        provider = locationManager.getBestProvider(criteria, false);
+        provider = locationManager.getBestProvider(criteria, true);
+        //provider = LocationManager.NETWORK_PROVIDER;
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location location = locationManager.getLastKnownLocation(provider);
 
-            // ATTENTION: This was auto-generated to implement the App Indexing API.
-            // See https://g.co/AppIndexing/AndroidStudio for more information.
-            //client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
-            if (location != null) {
-                System.out.println("Provider " + provider + "has been selected.");
-                onLocationChanged(location);
+        if (location != null) {
+            System.out.println("Provider " + provider + "has been selected.");
+            onLocationChanged(location);
+        } else {
+            latitudeField.setText("Location not available");
+            longitudeField.setText("Location not available");
+        }
+
+
+    }
+
+    public void listProvider(View view){
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        for(String prv : locationManager.getAllProviders()) {
+            Toast.makeText(getApplicationContext(), prv, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void getPosicaoGPS(View view){
+        //Location location = locationManager.getProvider("GPS");
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,400,1,this);
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+
+        if (location != null) {
+            System.out.println("Provider " + provider + "has been selected.");
+            onLocationChanged(location);
+        } else {
+            latitudeField.setText("Location not available");
+            longitudeField.setText("Location not available");
+        }
+    }
+
+    public void getPosicaoNetwork(View view){
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,400,1,this);
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+        if (location != null) {
+            System.out.println("Provider " + provider + "has been selected.");
+            onLocationChanged(location);
+        } else {
+            latitudeNetworkField.setText("Location not available");
+            longitudeNetworkField.setText("Location not available");
+        }
+
+    }
+
+    public void getPosicaoPassive(View view){
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER,400,1,this);
+        Location location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+
+        if (location != null) {
+            System.out.println("Provider " + provider + "has been selected.");
+            onLocationChanged(location);
+        } else {
+            latitudePassiveField.setText("Location not available");
+            longitudePassiveField.setText("Location not available");
+        }
+    }
+
+    public void getDebugMode (View view){
+        if (BuildConfig.DEBUG){
+            Toast.makeText(this,"Debug Mode: ON.",Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this,"Debug Mode: OFF.",Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void getMockLocation(View view){
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location != null) {
+            if (location.isFromMockProvider()) {
+                Toast.makeText(this, "Mock Location: ON.", Toast.LENGTH_SHORT).show();
             } else {
-                latitudeField.setText("Location not available");
-                longitudeField.setText("Location not available");
+                Toast.makeText(this, "Mock Location: OFF.", Toast.LENGTH_SHORT).show();
             }
-            return;
+        }else {
+            Toast.makeText(this,"GPS not available.",Toast.LENGTH_SHORT).show();
         }
 
     }
@@ -69,16 +131,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     protected void onResume() {
         super.onResume();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+
         locationManager.requestLocationUpdates(provider, 400, 1, this);
 
     }
@@ -86,25 +139,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     protected void onPause() {
         super.onPause();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+
         locationManager.removeUpdates(this);
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        int lat = (int) (location.getLatitude());
-        int lon = (int) (location.getLongitude());
-        latitudeField.setText(String.valueOf(lat));
-        longitudeField.setText(String.valueOf(lon));
+
+            double lat = (location.getLatitude());
+            double lon = (location.getLongitude());
+
+            if (location.getProvider().equals("gps")) {
+                latitudeField.setText(String.valueOf(lat));
+                longitudeField.setText(String.valueOf(lon));
+            } else if (location.getProvider().equals("network")) {
+                latitudeNetworkField.setText(String.valueOf(lat));
+                longitudeNetworkField.setText(String.valueOf(lon));
+            } else {
+                latitudePassiveField.setText(String.valueOf(lat));
+                longitudePassiveField.setText(String.valueOf(lon));
+            }
+
 
     }
 
@@ -115,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onProviderEnabled(String s) {
-        Toast.makeText(this, "Enabled new provider " + provider, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Enabled new provider " + provider, Toast.LENGTH_SHORT).show();
 
     }
 
